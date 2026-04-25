@@ -13,6 +13,8 @@
     "core:window:allow-maximize",
     "core:window:allow-close",
     "core:app:allow-version",
-    "core:app:allow-name"
+    "core:app:allow-name",
+    "core:path:default",
+    "window-state:default"
   ]
 }

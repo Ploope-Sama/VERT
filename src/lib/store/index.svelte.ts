@@ -11,6 +11,8 @@ import { m } from "$lib/paraglide/messages";
 import sanitizeHtml from "sanitize-html";
 import { ToastManager } from "$lib/util/toast.svelte";
 import { GB } from "$lib/util/consts";
+import { isTauri } from "$lib/util/tauri";
+import { correctExtension } from "$lib/util/magic-bytes";
 
 class Files {
 	public files = $state<VertFile[]>([]);
@@ -263,31 +265,42 @@ class Files {
 				}
 			}
 
-			// regular files
-			const format = "." + file.name.split(".").pop()?.toLowerCase();
+			// regular files — use magic bytes to detect actual type, fall back to extension
+			const extensionFormat = "." + file.name.split(".").pop()?.toLowerCase();
+			const format = await correctExtension(file);
 			if (!format) {
 				log(["files"], `no extension found for ${file.name}`);
 				return;
 			}
+
+			// If magic bytes reveal a different type, rename the file so VertFile.from
+			// uses the correct extension (VertFile derives "from" from the filename).
+			let effectiveFile = file;
+			if (format !== extensionFormat) {
+				log(["files"], `magic bytes: ${file.name} is ${format} (extension says ${extensionFormat})`);
+				const baseName = file.name.replace(/\.[^/.]+$/, "");
+				effectiveFile = new File([file], `${baseName}${format}`, { type: file.type, lastModified: file.lastModified });
+			}
+
 			const converter = converters
 				.sort(byNative(format))
 				.find((converter) => converter.formatStrings().includes(format));
 			if (!converter) {
-				log(["files"], `no converter found for ${file.name}`);
-				this.files.push(new VertFile(file, format));
+				log(["files"], `no converter found for ${effectiveFile.name}`);
+				this.files.push(new VertFile(effectiveFile, format));
 				return;
 			}
 			const to = converter.formatStrings().find((f) => f !== format);
 			if (!to) {
-				log(["files"], `no output format found for ${file.name}`);
+				log(["files"], `no output format found for ${effectiveFile.name}`);
 				return;
 			}
-			const vf = new VertFile(file, to);
+			const vf = new VertFile(effectiveFile, to);
 			this.files.push(vf);
 			this._addThumbnail(vf);
 
 			const convName = converter.name;
-			if (file.size > MAX_ARRAY_BUFFER_SIZE && convName === "vertd") {
+			if (effectiveFile.size > MAX_ARRAY_BUFFER_SIZE && convName === "vertd") {
 				ToastManager.add({
 					type: "warning",
 					message: m["convert.large_file_warning"]({
@@ -399,6 +412,21 @@ class Files {
 		a.click();
 		URL.revokeObjectURL(url);
 		a.remove();
+
+		// Success toast — show download folder in Tauri
+		let folder: string | null = null;
+		if (isTauri) {
+			try {
+				const { downloadDir } = await import("@tauri-apps/api/path");
+				folder = await downloadDir();
+			} catch { /* silent */ }
+		}
+		ToastManager.add({
+			type: "success",
+			message: folder
+				? m["toast.download_all_success_folder"]({ folder })
+				: m["toast.download_all_success"](),
+		});
 	}
 }
 

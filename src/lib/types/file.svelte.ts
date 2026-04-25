@@ -2,6 +2,7 @@ import { byNative, converters } from "$lib/converters";
 import type { Converter } from "$lib/converters/converter.svelte";
 import { m } from "$lib/paraglide/messages";
 import { ToastManager } from "$lib/util/toast.svelte";
+import { isTauri } from "$lib/util/tauri";
 import type { Component } from "svelte";
 import { MAX_ARRAY_BUFFER_SIZE } from "$lib/store/index.svelte";
 
@@ -302,6 +303,21 @@ export class VertFile {
 		a.click();
 		URL.revokeObjectURL(blob);
 		a.remove();
+
+		// Success toast — show download folder in Tauri
+		let folder: string | null = null;
+		if (isTauri) {
+			try {
+				const { downloadDir } = await import("@tauri-apps/api/path");
+				folder = await downloadDir();
+			} catch { /* silent */ }
+		}
+		ToastManager.add({
+			type: "success",
+			message: folder
+				? m["toast.download_success_folder"]({ filename: a.download, folder })
+				: m["toast.download_success"]({ filename: a.download }),
+		});
 	}
 
 	public hash(): Promise<string> {

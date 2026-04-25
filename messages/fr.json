@@ -217,5 +217,11 @@
 			"no_audio": "Aucun flux audio détécté.",
 			"invalid_rate": "Taux d'échantillonnage spécifié non valide: {rate}Hz"
 		}
+	},
+	"toast": {
+		"download_success": "{filename} téléchargé avec succès",
+		"download_success_folder": "{filename} enregistré dans {folder}",
+		"download_all_success": "Tous les fichiers téléchargés avec succès",
+		"download_all_success_folder": "Tous les fichiers enregistrés dans {folder}"
 	}
 }

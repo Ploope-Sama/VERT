@@ -320,6 +320,10 @@
 		"last_updated": "Last updated: 2025-10-29"
 	},
 	"toast": {
-		"insecure_context": "You are visiting VERT in an insecure context (e.g. accessing over HTTP instead of HTTPS). Some features may not work as expected."
+		"insecure_context": "You are visiting VERT in an insecure context (e.g. accessing over HTTP instead of HTTPS). Some features may not work as expected.",
+		"download_success": "{filename} downloaded successfully",
+		"download_success_folder": "{filename} saved to {folder}",
+		"download_all_success": "All files downloaded successfully",
+		"download_all_success_folder": "All files saved to {folder}"
 	}
 }
