@@ -102,7 +102,13 @@ class ServiceWorkerManager {
 
 export const swManager = new ServiceWorkerManager();
 
-// Auto-initialize when imported
+// Auto-initialize when imported — skip in Tauri (assets are bundled locally, SW is useless and breaks WASM loading)
 if (browser) {
-	swManager.init();
+	if ("__TAURI_INTERNALS__" in window) {
+		navigator.serviceWorker.getRegistrations().then((registrations) => {
+			for (const r of registrations) r.unregister();
+		});
+	} else {
+		swManager.init();
+	}
 }

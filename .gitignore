@@ -22,3 +22,6 @@ vite.config.ts.timestamp-*
 
 # IDE
 .idea
+
+# Large WASM binaries (copied from node_modules at build time)
+/static/magick.wasm

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { GITHUB_URL_VERT, DISCORD_URL } from "$lib/util/consts";
 	import { m } from "$lib/paraglide/messages";
+	import { getAppVersion, isTauri } from "$lib/util/tauri";
 
 	const commitHash =
 		__COMMIT_HASH__ && __COMMIT_HASH__ !== "unknown"
@@ -11,6 +12,11 @@
 
 	// we can't use svelte snippets or a derived object to render the footer as it causes a full-page reload
 	// ...for some reason. i have no idea, maybe it's to do with the {#key $locale} in +layout.svelte
+
+	let appVersion = $state<string | null>(null);
+	if (isTauri) {
+		getAppVersion().then((v) => (appVersion = v));
+	}
 </script>
 
 <footer
@@ -43,7 +49,10 @@
 		>
 			{m["footer.privacy_policy"]()}
 		</a>
-		{#if commitHash}
+		{#if appVersion}
+			<p>•</p>
+			<span class="font-normal">v{appVersion}</span>
+		{:else if commitHash}
 			<p>•</p>
 			<a
 				class="hover:underline font-normal"

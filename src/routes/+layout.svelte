@@ -71,6 +71,7 @@
 		const now = new Date();
 		isAprilFools = now.getDate() === 1 && now.getMonth() === 3;
 
+
 		initAnimStores();
 
 		const handleResize = () => {

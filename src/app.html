@@ -20,6 +20,14 @@
 		%sveltekit.head%
 		<script>
 			(function () {
+				// In Tauri, unregister any Service Worker immediately — before converters initialize.
+				// The SW cannot fetch assets from Tauri's embedded protocol and breaks WASM loading.
+				if ("__TAURI_INTERNALS__" in window && "serviceWorker" in navigator) {
+					navigator.serviceWorker.getRegistrations().then(function(regs) {
+						regs.forEach(function(r) { r.unregister(); });
+					});
+				}
+
 				// Apply theme before DOM is loaded
 				let theme = localStorage.getItem("theme");
 				const prefersDark = window.matchMedia(

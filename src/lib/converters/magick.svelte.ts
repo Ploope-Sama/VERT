@@ -6,7 +6,8 @@ import MagickWorker from "$lib/workers/magick?worker&url";
 import { Converter, FormatInfo } from "./converter.svelte";
 import { imageFormats } from "./magick-automated";
 import { Settings } from "$lib/sections/settings/index.svelte";
-import magickWasm from "@imagemagick/magick-wasm/magick.wasm?url";
+// Served from static/ for stable URL — Tauri's embedded protocol fails on hashed _app/immutable/ paths
+const magickWasm = "/magick.wasm";
 import { ToastManager } from "$lib/util/toast.svelte";
 
 export class MagickConverter extends Converter {

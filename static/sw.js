@@ -1,7 +1,11 @@
-const CACHE_NAME = "vert-wasm-cache-v2"; // updated when workers update
+const CACHE_NAME = "vert-wasm-cache-v4"; // v4: skip all fetch interception in Tauri
+
+// In Tauri the embedded protocol can't be re-fetched from within a SW context
+const isTauri = self.location.hostname === "tauri.localhost";
 
 const WASM_FILES = [
 	"/pandoc.wasm",
+	"/magick.wasm",
 	"https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.10/dist/esm/ffmpeg-core.js",
 	"https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.10/dist/esm/ffmpeg-core.wasm",
 ];
@@ -9,7 +13,7 @@ const WASM_FILES = [
 const WASM_URL_PATTERNS = [
 	/\/src\/lib\/workers\/.*\.js$/, // dev mode worker files
 	/\/assets\/.*worker.*\.js$/, // prod worker files
-	/magick.*\.wasm$/, // magick-wasm (unneeded?)
+	// magick.wasm is a bundled Tauri asset — SW fetch cannot access tauri:// protocol assets
 ];
 
 function shouldCacheUrl(url) {
@@ -68,6 +72,8 @@ self.addEventListener("activate", (event) => {
 });
 
 self.addEventListener("fetch", (event) => {
+	if (isTauri) return; // Never intercept in Tauri — SW can't fetch embedded protocol assets
+
 	const request = event.request;
 
 	if (!shouldCacheUrl(request.url)) {
@@ -117,7 +123,8 @@ self.addEventListener("fetch", (event) => {
 				})
 				.catch((err) => {
 					console.error("[SW] fetch failed for:", request.url, err);
-					throw err;
+					// fall back to a plain network fetch so the app can still handle the error
+					return fetch(request.url);
 				});
 		}),
 	);

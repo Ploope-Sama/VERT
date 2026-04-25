@@ -19,6 +19,8 @@ if (commitHash === "unknown") {
 	}
 }
 
+const isTauri = !!process.env.TAURI_ENV_TARGET_TRIPLE;
+
 export default defineConfig(({ command }) => {
 	const plugins: PluginOption[] = [
 		sveltekit(),
@@ -63,10 +65,17 @@ export default defineConfig(({ command }) => {
 			},
 		},
 		build: {
-			target: "esnext",
+			target: isTauri ? "chrome105" : "esnext",
 		},
+		server: isTauri
+			? {
+					strictPort: true,
+					port: 5173,
+				}
+			: undefined,
 		define: {
 			__COMMIT_HASH__: JSON.stringify(commitHash),
+			__TAURI__: JSON.stringify(isTauri),
 		},
 	};
 });

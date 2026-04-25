@@ -31,6 +31,7 @@ declare global {
 	}
 
 	const __COMMIT_HASH__: string;
+	const __TAURI__: boolean;
 }
 
 /**
