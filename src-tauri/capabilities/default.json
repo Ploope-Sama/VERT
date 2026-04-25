@@ -15,6 +15,15 @@
     "core:app:allow-version",
     "core:app:allow-name",
     "core:path:default",
-    "window-state:default"
+    "window-state:default",
+    "dialog:allow-open",
+    {
+      "identifier": "fs:allow-write-file",
+      "allow": [{ "path": "**" }]
+    },
+    {
+      "identifier": "fs:allow-mkdir",
+      "allow": [{ "path": "**" }]
+    }
   ]
 }

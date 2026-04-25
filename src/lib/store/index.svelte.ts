@@ -11,7 +11,7 @@ import { m } from "$lib/paraglide/messages";
 import sanitizeHtml from "sanitize-html";
 import { ToastManager } from "$lib/util/toast.svelte";
 import { GB } from "$lib/util/consts";
-import { isTauri } from "$lib/util/tauri";
+import { isTauri, saveFileTo } from "$lib/util/tauri";
 import { correctExtension } from "$lib/util/magic-bytes";
 
 class Files {
@@ -371,6 +371,21 @@ class Files {
 
 	public async downloadAll() {
 		if (files.files.length === 0) return;
+
+		const settings = JSON.parse(localStorage.getItem("settings") ?? "{}");
+		const filenameFormat = settings.filenameFormat || "VERT_%name%";
+		const downloadFolder: string = settings.downloadFolder || "";
+
+		const format = (name: string) => {
+			const date = new Date().toISOString();
+			return name
+				.replace(/%date%/g, date)
+				.replace(/%name%/g, "Multi")
+				.replace(/%extension%/g, "");
+		};
+
+		const zipName = `${format(filenameFormat)}.zip`;
+
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		const dlFiles: any[] = [];
 		for (let i = 0; i < files.files.length; i++) {
@@ -392,28 +407,30 @@ class Files {
 			});
 		}
 		const { downloadZip } = await import("client-zip");
-		const blob = await downloadZip(dlFiles, "converted.zip").blob();
-		const url = URL.createObjectURL(blob);
+		const zipBlob = await downloadZip(dlFiles, zipName).blob();
 
-		const settings = JSON.parse(localStorage.getItem("settings") ?? "{}");
-		const filenameFormat = settings.filenameFormat || "VERT_%name%";
+		// In Tauri with a custom folder: write the ZIP directly to the filesystem
+		if (isTauri && downloadFolder) {
+			const { join } = await import("@tauri-apps/api/path");
+			const filePath = await join(downloadFolder, zipName);
+			await saveFileTo(filePath, new Uint8Array(await zipBlob.arrayBuffer()));
+			ToastManager.add({
+				type: "success",
+				message: m["toast.download_all_success_folder"]({ folder: downloadFolder }),
+			});
+			return;
+		}
 
-		const format = (name: string) => {
-			const date = new Date().toISOString();
-			return name
-				.replace(/%date%/g, date)
-				.replace(/%name%/g, "Multi")
-				.replace(/%extension%/g, "");
-		};
-
+		// Default: browser-style download via <a> element
+		const url = URL.createObjectURL(zipBlob);
 		const a = document.createElement("a");
 		a.href = url;
-		a.download = `${format(filenameFormat)}.zip`;
+		a.download = zipName;
 		a.click();
 		URL.revokeObjectURL(url);
 		a.remove();
 
-		// Success toast — show download folder in Tauri
+		// Success toast — show system download folder in Tauri (no custom folder set)
 		let folder: string | null = null;
 		if (isTauri) {
 			try {

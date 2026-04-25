@@ -2,7 +2,7 @@ import { byNative, converters } from "$lib/converters";
 import type { Converter } from "$lib/converters/converter.svelte";
 import { m } from "$lib/paraglide/messages";
 import { ToastManager } from "$lib/util/toast.svelte";
-import { isTauri } from "$lib/util/tauri";
+import { isTauri, saveFileTo } from "$lib/util/tauri";
 import type { Component } from "svelte";
 import { MAX_ARRAY_BUFFER_SIZE } from "$lib/store/index.svelte";
 
@@ -277,6 +277,7 @@ export class VertFile {
 
 		const settings = JSON.parse(localStorage.getItem("settings") ?? "{}");
 		const filenameFormat = settings.filenameFormat || "VERT_%name%";
+		const downloadFolder: string = settings.downloadFolder || "";
 
 		const format = (name: string) => {
 			const date = new Date().toISOString();
@@ -288,23 +289,37 @@ export class VertFile {
 				.replace(/%extension%/g, originalExtension);
 		};
 
+		const filename = `${format(filenameFormat)}${to}`;
+
+		// In Tauri with a custom folder: write directly to the filesystem
+		if (isTauri && downloadFolder) {
+			const { join } = await import("@tauri-apps/api/path");
+			const filePath = await join(downloadFolder, filename);
+			const data = new Uint8Array(await this.result.file.arrayBuffer());
+			await saveFileTo(filePath, data);
+			ToastManager.add({
+				type: "success",
+				message: m["toast.download_success_folder"]({ filename, folder: downloadFolder }),
+			});
+			return;
+		}
+
+		// Default: browser-style download via <a> element
 		const blob = URL.createObjectURL(
 			new Blob([await this.result.file.arrayBuffer()], {
-				// type: to.slice(1),
 				type: "application/octet-stream", // use generic type to prevent browsers changing extension
 			}),
 		);
 		const a = document.createElement("a");
 		a.href = blob;
-		a.download = `${format(filenameFormat)}${to}`;
-		// force it to not open in a new tab
+		a.download = filename;
 		a.target = "_blank";
 		a.style.display = "none";
 		a.click();
 		URL.revokeObjectURL(blob);
 		a.remove();
 
-		// Success toast — show download folder in Tauri
+		// Success toast — show system download folder in Tauri (no custom folder set)
 		let folder: string | null = null;
 		if (isTauri) {
 			try {
@@ -315,8 +330,8 @@ export class VertFile {
 		ToastManager.add({
 			type: "success",
 			message: folder
-				? m["toast.download_success_folder"]({ filename: a.download, folder })
-				: m["toast.download_success"]({ filename: a.download }),
+				? m["toast.download_success_folder"]({ filename, folder })
+				: m["toast.download_success"]({ filename }),
 		});
 	}
 

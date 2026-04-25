@@ -158,7 +158,12 @@
 			"quality_video": "This changes the default output quality of the converted video files. Higher values may result in longer conversion times and file size.",
 			"quality_audio": "Audio (kbps)",
 			"quality_images": "Image (%)",
-			"rate": "Sample rate (Hz)"
+			"rate": "Sample rate (Hz)",
+			"download_folder": "Download folder",
+			"download_folder_description": "Where converted files are saved. Only available in the desktop app.",
+			"download_folder_default": "Default (system downloads folder)",
+			"download_folder_choose": "Choose folder…",
+			"download_folder_reset": "Reset to default"
 		},
 		"vertd": {
 			"title": "Video conversion",

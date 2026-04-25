@@ -121,7 +121,12 @@
 			"quality_video": "Cela modifie la qualité de sortie par défaut des fichiers vidéo convertis. Des valeurs plus élevées peuvent allonger le temps de conversion et la taille du fichier.",
 			"quality_audio": "Audio (kbps)",
 			"quality_images": "Image (%)",
-			"rate": "Taux d'échantillonnage (Hz)"
+			"rate": "Taux d'échantillonnage (Hz)",
+			"download_folder": "Dossier de téléchargement",
+			"download_folder_description": "L'endroit où les fichiers convertis sont enregistrés. Disponible uniquement dans l'application bureau.",
+			"download_folder_default": "Par défaut (dossier Téléchargements)",
+			"download_folder_choose": "Choisir un dossier…",
+			"download_folder_reset": "Réinitialiser"
 		},
 		"vertd": {
 			"title": "Conversion vidéo",

@@ -29,6 +29,7 @@ export interface ISettings {
 	ffmpegSampleRate: string; // audio (or audio <-> video)
 	ffmpegCustomSampleRate: number; // audio (or audio <-> video) - only used when ffmpegSampleRate is "custom"
 	vertdBlockedHashes: Map<string, Date[]>; // hashes of files blocked from vertd conversion
+	downloadFolder: string; // custom download destination (Tauri only); "" = use OS default
 }
 
 export class Settings {
@@ -52,6 +53,7 @@ export class Settings {
 		ffmpegSampleRate: "auto",
 		ffmpegCustomSampleRate: 44100,
 		vertdBlockedHashes: new Map<string, Date[]>(),
+		downloadFolder: "",
 	});
 
 	public save() {

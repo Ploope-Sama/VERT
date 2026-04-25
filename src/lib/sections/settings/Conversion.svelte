@@ -6,6 +6,9 @@
 		PlayIcon,
 		RefreshCwIcon,
 		ChevronDownIcon,
+		FolderIcon,
+		FolderOpenIcon,
+		RotateCcwIcon,
 	} from "lucide-svelte";
 	import type { ISettings } from "./index.svelte";
 	import {
@@ -21,9 +24,15 @@
 	import FormatDropdown from "$lib/components/functional/FormatDropdown.svelte";
 	import { categories } from "$lib/converters";
 	import clsx from "clsx";
+	import { isTauri, pickFolder } from "$lib/util/tauri";
 
 	const { settings = $bindable() }: { settings: ISettings } = $props();
 	let showAdvanced = $state(false);
+
+	async function chooseFolder() {
+		const folder = await pickFolder(m["settings.conversion.download_folder"]());
+		if (folder) settings.downloadFolder = folder;
+	}
 </script>
 
 <Panel class="flex flex-col gap-8 p-6">
@@ -53,6 +62,41 @@
 					type="text"
 				/>
 			</div>
+			{#if isTauri}
+				<div class="flex flex-col gap-2">
+					<p class="text-base font-bold">
+						{m["settings.conversion.download_folder"]()}
+					</p>
+					<p class="text-sm text-muted font-normal">
+						{m["settings.conversion.download_folder_description"]()}
+					</p>
+					<div class="flex items-center gap-2 mt-1">
+						<div class="flex-1 flex items-center gap-2 bg-button rounded-lg px-3 py-2 min-w-0">
+							<FolderIcon size="16" class="shrink-0 text-muted" />
+							<span class="text-sm truncate text-muted font-mono">
+								{settings.downloadFolder || m["settings.conversion.download_folder_default"]()}
+							</span>
+						</div>
+						<button
+							onclick={chooseFolder}
+							class="btn {$effects ? '' : '!scale-100'} flex items-center gap-2 px-3 py-2 rounded-lg text-black dynadark:text-white shrink-0"
+							title={m["settings.conversion.download_folder_choose"]()}
+						>
+							<FolderOpenIcon size="16" />
+							<span class="text-sm">{m["settings.conversion.download_folder_choose"]()}</span>
+						</button>
+						{#if settings.downloadFolder}
+							<button
+								onclick={() => (settings.downloadFolder = "")}
+								class="btn {$effects ? '' : '!scale-100'} flex items-center gap-2 px-3 py-2 rounded-lg text-black dynadark:text-white shrink-0"
+								title={m["settings.conversion.download_folder_reset"]()}
+							>
+								<RotateCcwIcon size="16" />
+							</button>
+						{/if}
+					</div>
+				</div>
+			{/if}
 			<div class="flex flex-col gap-4">
 				<button
 					onclick={() => (showAdvanced = !showAdvanced)}
