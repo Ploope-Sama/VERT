@@ -1,3 +1,5 @@
+mod commands;
+use commands::{ActiveProcesses, detect_ffmpeg, ffmpeg_convert, ffmpeg_cancel};
 use tauri::Manager;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -13,6 +15,12 @@ pub fn run() {
         let _ = window.set_focus();
       }
     }))
+    .manage(ActiveProcesses(std::sync::Mutex::new(std::collections::HashMap::new())))
+    .invoke_handler(tauri::generate_handler![
+      detect_ffmpeg,
+      ffmpeg_convert,
+      ffmpeg_cancel,
+    ])
     .setup(|app| {
       if cfg!(debug_assertions) {
         app.handle().plugin(

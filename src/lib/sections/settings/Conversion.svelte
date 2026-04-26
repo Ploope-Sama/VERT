@@ -9,6 +9,9 @@
 		FolderIcon,
 		FolderOpenIcon,
 		RotateCcwIcon,
+		CheckCircleIcon,
+		AlertCircleIcon,
+		Cpu,
 	} from "lucide-svelte";
 	import type { ISettings } from "./index.svelte";
 	import {
@@ -25,6 +28,7 @@
 	import { categories } from "$lib/converters";
 	import clsx from "clsx";
 	import { isTauri, pickFolder } from "$lib/util/tauri";
+	import { converters } from "$lib/converters";
 
 	const { settings = $bindable() }: { settings: ISettings } = $props();
 	let showAdvanced = $state(false);
@@ -33,6 +37,9 @@
 		const folder = await pickFolder(m["settings.conversion.download_folder"]());
 		if (folder) settings.downloadFolder = folder;
 	}
+
+	// Reactive reference to the LocalFfmpegConverter instance (Tauri-only)
+	const localFfmpeg = converters.find((c) => c.name === "local-ffmpeg");
 </script>
 
 <Panel class="flex flex-col gap-8 p-6">
@@ -96,6 +103,45 @@
 						{/if}
 					</div>
 				</div>
+
+				<!-- Local FFmpeg status (Tauri only) -->
+				{#if localFfmpeg}
+					<div class="flex flex-col gap-2">
+						<p class="text-base font-bold">
+							<Cpu
+								size="20"
+								class="inline-block -mt-0.5 mr-1"
+							/>
+							{m["settings.conversion.local_ffmpeg"]()}
+						</p>
+						<p class="text-sm text-muted font-normal">
+							{m["settings.conversion.local_ffmpeg_description"]()}
+						</p>
+						{#if localFfmpeg.status === "ready"}
+							<div class="flex items-center gap-2 text-green-500">
+								<CheckCircleIcon size="16" class="shrink-0" />
+								<span class="text-sm font-medium">
+									{m["settings.conversion.local_ffmpeg_detected"]()}
+								</span>
+							</div>
+						{:else}
+							<div class="flex items-center gap-2 flex-wrap">
+								<AlertCircleIcon size="16" class="shrink-0 text-yellow-500" />
+								<span class="text-sm text-yellow-500 font-medium">
+									{m["settings.conversion.local_ffmpeg_not_found"]()}
+								</span>
+								<a
+									href="https://ffmpeg.org/download.html"
+									target="_blank"
+									rel="noopener noreferrer"
+									class="text-sm underline text-accent hover:opacity-80 transition-opacity"
+								>
+									{m["settings.conversion.local_ffmpeg_install"]()}
+								</a>
+							</div>
+						{/if}
+					</div>
+				{/if}
 			{/if}
 			<div class="flex flex-col gap-4">
 				<button

@@ -13,6 +13,7 @@
 	import type { WorkerStatus } from "$lib/converters/converter.svelte";
 	import { sanitize } from "$lib/store/index.svelte";
 	import { DISABLE_ALL_EXTERNAL_REQUESTS } from "$lib/util/consts";
+	import { isTauri } from "$lib/util/tauri";
 
 	const getSupportedFormats = (name: string) =>
 		converters
@@ -23,12 +24,16 @@
 			)
 			.join(", ") || "none";
 
+	// LocalFfmpegConverter reference — only present in Tauri builds
+	const localFfmpegConverter = converters.find((c) => c.name === "local-ffmpeg");
+
 	const worker: {
 		[key: string]: {
 			formats: string;
 			icon: typeof Image;
 			title: string;
 			status: WorkerStatus;
+			isLocal?: boolean;
 		};
 	} = $derived.by(() => {
 		const output: {
@@ -37,6 +42,7 @@
 				icon: typeof Image;
 				title: string;
 				status: WorkerStatus;
+				isLocal?: boolean;
 			};
 		} = {
 			Images: {
@@ -65,12 +71,15 @@
 			},
 		};
 
-		if (!DISABLE_ALL_EXTERNAL_REQUESTS) {
+		// Video card: prefer local FFmpeg when available, fall back to vertd
+		const localReady = localFfmpegConverter?.status === "ready";
+		if (localReady || !DISABLE_ALL_EXTERNAL_REQUESTS) {
 			output.Video = {
-				formats: getSupportedFormats("vertd"),
+				formats: getSupportedFormats("vertd"), // same format list for both
 				icon: Film,
 				title: m["upload.cards.video"](),
-				status: $vertdLoaded === true ? "ready" : "not-ready", // not using converter.status for this
+				status: localReady ? "ready" : ($vertdLoaded === true ? "ready" : "not-ready"),
+				isLocal: localReady,
 			};
 		}
 
@@ -194,40 +203,31 @@
 									bind:this={scrollContainers[i]}
 								>
 									{#if key === "Video"}
-										<p
-											class="flex tems-center justify-center gap-2"
-										>
+										<p class="flex items-center justify-center gap-2">
 											<Check size="20" />
-											<Tooltip
-												text={m[
-													"upload.tooltip.video_server_processing"
-												]()}
-											>
-												<span>
-													<a
-														href="https://github.com/VERT-sh/VERT/blob/main/docs/VIDEO_CONVERSION.md"
-														target="_blank"
-														rel="noopener noreferrer"
-													>
-														{m[
-															"upload.cards.video_server_processing"
-														]()}
-													</a>
-													<span
-														class="text-red-500 -ml-0.5"
-														>*</span
-													>
-												</span>
-											</Tooltip>
+											{#if s.isLocal}
+												{m["upload.cards.local_supported"]()}
+											{:else}
+												<Tooltip
+													text={m["upload.tooltip.video_server_processing"]()}
+												>
+													<span>
+														<a
+															href="https://github.com/VERT-sh/VERT/blob/main/docs/VIDEO_CONVERSION.md"
+															target="_blank"
+															rel="noopener noreferrer"
+														>
+															{m["upload.cards.video_server_processing"]()}
+														</a>
+														<span class="text-red-500 -ml-0.5">*</span>
+													</span>
+												</Tooltip>
+											{/if}
 										</p>
 									{:else}
-										<p
-											class="flex tems-center justify-center gap-2"
-										>
+										<p class="flex items-center justify-center gap-2">
 											<Check size="20" />
-											{m[
-												"upload.cards.local_supported"
-											]()}
+											{m["upload.cards.local_supported"]()}
 										</p>
 									{/if}
 									<p>

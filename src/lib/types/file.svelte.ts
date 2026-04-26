@@ -49,6 +49,10 @@ export class VertFile {
 		if (this.isZip()) return this.converters[0];
 
 		const converter = this.converters.find((converter) => {
+			// Skip converters that have permanently failed or are not installed
+			// ("downloading" is kept so WASM converters block conversion while loading)
+			if (converter.status === "not-ready") return false;
+
 			if (
 				!converter.formatStrings().includes(this.from) ||
 				!converter.formatStrings().includes(this.to)

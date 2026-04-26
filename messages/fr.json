@@ -126,7 +126,12 @@
 			"download_folder_description": "L'endroit où les fichiers convertis sont enregistrés. Disponible uniquement dans l'application bureau.",
 			"download_folder_default": "Par défaut (dossier Téléchargements)",
 			"download_folder_choose": "Choisir un dossier…",
-			"download_folder_reset": "Réinitialiser"
+			"download_folder_reset": "Réinitialiser",
+			"local_ffmpeg": "Conversion vidéo locale (FFmpeg)",
+			"local_ffmpeg_description": "Lorsque FFmpeg est installé sur votre système, VERT convertit les vidéos localement — sans envoi sur serveur, sans limite de taille.",
+			"local_ffmpeg_detected": "FFmpeg détecté — conversion vidéo locale active",
+			"local_ffmpeg_not_found": "FFmpeg non trouvé — utilisation du serveur distant",
+			"local_ffmpeg_install": "Installer FFmpeg"
 		},
 		"vertd": {
 			"title": "Conversion vidéo",

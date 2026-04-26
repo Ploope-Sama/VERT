@@ -4,13 +4,22 @@ import { FFmpegConverter } from "./ffmpeg.svelte";
 import { PandocConverter } from "./pandoc.svelte";
 import { VertdConverter } from "./vertd.svelte";
 import { MagickConverter } from "./magick.svelte";
+import { LocalFfmpegConverter } from "./local-ffmpeg.svelte";
 import { DISABLE_ALL_EXTERNAL_REQUESTS } from "$lib/util/consts";
+import { isTauri } from "$lib/util/tauri";
 
 const getConverters = (): Converter[] => {
 	const converters: Converter[] = [
 		new MagickConverter(),
 		new FFmpegConverter(),
 	];
+
+	// LocalFfmpegConverter is registered before VertdConverter so that when
+	// FFmpeg is available it takes priority (findConverter picks the first
+	// matching converter that has status === "ready").
+	if (isTauri) {
+		converters.push(new LocalFfmpegConverter());
+	}
 
 	if (!DISABLE_ALL_EXTERNAL_REQUESTS) {
 		converters.push(new VertdConverter());
@@ -43,11 +52,23 @@ categories.audio.formats =
 		.find((c) => c.name === "ffmpeg")
 		?.supportedFormats.filter((f) => f.toSupported && f.isNative)
 		.map((f) => f.name) || [];
-categories.video.formats =
-	converters
-		.find((c) => c.name === "vertd")
-		?.supportedFormats.filter((f) => f.toSupported && f.isNative)
-		.map((f) => f.name) || [];
+
+// Video formats: merge local-ffmpeg and vertd so formats appear in the
+// dropdown even when only one of the two converters is available.
+{
+	const localFormats =
+		converters
+			.find((c) => c.name === "local-ffmpeg")
+			?.supportedFormats.filter((f) => f.toSupported && f.isNative)
+			.map((f) => f.name) ?? [];
+	const vertdFormats =
+		converters
+			.find((c) => c.name === "vertd")
+			?.supportedFormats.filter((f) => f.toSupported && f.isNative)
+			.map((f) => f.name) ?? [];
+	categories.video.formats = Array.from(new Set([...localFormats, ...vertdFormats]));
+}
+
 categories.image.formats =
 	converters
 		.find((c) => c.name === "imagemagick")

@@ -24,8 +24,14 @@ class Files {
 	public ready = $derived(
 		this.files.length === 0
 			? false
-			: this.requiredConverters.every((f) => f?.status === "ready") &&
-					this.files.every((f) => !f.processing),
+			: this.files.every(
+					(f) =>
+						!f.processing &&
+						// A file with no converter (unsupported format) doesn't block
+						// the button; files with converters need at least one "ready".
+						(f.converters.length === 0 ||
+							f.converters.some((c) => c.status === "ready")),
+				),
 	);
 	public results = $derived(
 		this.files.length === 0 ? false : this.files.every((f) => f.result),
@@ -168,7 +174,7 @@ class Files {
 					continue;
 				}
 
-				const converter = converters
+				const converter = [...converters]
 					.sort(byNative(format))
 					.find((c) => c.formatStrings().includes(format));
 
@@ -282,7 +288,7 @@ class Files {
 				effectiveFile = new File([file], `${baseName}${format}`, { type: file.type, lastModified: file.lastModified });
 			}
 
-			const converter = converters
+			const converter = [...converters]
 				.sort(byNative(format))
 				.find((converter) => converter.formatStrings().includes(format));
 			if (!converter) {

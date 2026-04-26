@@ -163,7 +163,12 @@
 			"download_folder_description": "Where converted files are saved. Only available in the desktop app.",
 			"download_folder_default": "Default (system downloads folder)",
 			"download_folder_choose": "Choose folder…",
-			"download_folder_reset": "Reset to default"
+			"download_folder_reset": "Reset to default",
+			"local_ffmpeg": "Local video conversion (FFmpeg)",
+			"local_ffmpeg_description": "When FFmpeg is installed on your system, VERT converts videos locally — no upload, no size limit.",
+			"local_ffmpeg_detected": "FFmpeg detected — local video conversion active",
+			"local_ffmpeg_not_found": "FFmpeg not found — using remote server",
+			"local_ffmpeg_install": "Install FFmpeg"
 		},
 		"vertd": {
 			"title": "Video conversion",
